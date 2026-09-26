@@ -1,0 +1,29 @@
+name: Agente de trading
+
+on:
+  schedule:
+    # Lunes a viernes, hora UTC (el código verifica si el mercado está abierto)
+    - cron: "45 14 * * 1-5"   # ~9:45 a. m. Nueva York
+    - cron: "0 19 * * 1-5"    # ~3:00 p. m. Nueva York
+  workflow_dispatch:
+    inputs:
+      solo_analisis:
+        description: "Solo analizar, sin enviar órdenes"
+        default: "true"
+
+jobs:
+  ejecutar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python agente.py
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MODO: paper
+          SOLO_ANALISIS: ${{ github.event.inputs.solo_analisis || 'false' }}
